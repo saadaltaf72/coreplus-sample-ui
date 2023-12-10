@@ -1,21 +1,40 @@
 import { useEffect, useState } from "react";
 import "./app.css";
-import { getRemaining, getSupervisors } from "./ApiCalls";
+import { getAppointmentReport, getRemaining, getSupervisors } from "./ApiCalls";
+import ReportUI from "./ReportUI";
 
 function App() {
 
   const [supervisors, setSupervisors] = useState([])
   const [remaining, setRemaining] = useState([])
+  const [formData, setFormData] = useState({ startDate: '', endDate: '', selectedPractitioner: null });
+  const [summary, setSummary] = useState([])
+
 
   useEffect(() => {
-    getSupervisors().then((payload) => {
-      setSupervisors(payload)
-    });
-    getRemaining().then((payload) => {
-      setRemaining(payload)
+    getSupervisors().then(setSupervisors);
+    getRemaining().then(setRemaining);
+    getSummaryData();
+
+  }, [formData?.startDate, formData?.endDate, formData?.selectedPractitioner]);
+
+  const handleOnChange = (name, value) => {
+    setFormData({
+      ...formData,
+      [name]: value,
     });
 
-  }, [])
+    getSummaryData();
+  };
+
+  const getSummaryData = () => {
+
+    getAppointmentReport(formData?.startDate, formData?.endDate).then((payload) => {
+      setSummary(payload)
+      console.log(payload)
+    });
+
+  }
 
   return (
     <div className="h-screen w-full appshell">
@@ -26,7 +45,7 @@ function App() {
         <p className="underline">Supervisor practitioners</p>
         <div className="w-full ">
           {supervisors && supervisors.map((item) => (
-            <p className="hover:bg-yellow-700 p-1 rounded cursor-pointer">{item.name}</p>
+            <p key={item.id} onClick={() => handleOnChange('selectedPractitioner', item.id)} className={"hover:bg-yellow-600 p-1 rounded cursor-pointer " + (formData?.selectedPractitioner === item.id ? " bg-yellow-700" : "")}>{item.name}</p>
           ))}
         </div>
       </div>
@@ -34,7 +53,7 @@ function App() {
         <p className="underline">Remaining Practitioners</p>
         <div className="w-full ">
           {remaining && remaining.map((item) => (
-            <p className="hover:bg-yellow-700 p-1 rounded cursor-pointer">{item.name}</p>
+            <p key={item.id} onClick={() => handleOnChange('selectedPractitioner', item.id)} className={"hover:bg-yellow-600 p-1 rounded cursor-pointer " + (formData?.selectedPractitioner === item.id ? " bg-yellow-700" : "")}>{item.name}</p>
           ))}
         </div>
       </div>
@@ -43,8 +62,18 @@ function App() {
           <p>
             Practitioner Report UI
           </p>
-          <input type="date"></input>
+          <div className="flex items-center">
+            <label className="mr-1">From</label>
+            <input type="date" value={formData?.startDate} onChange={(e) => handleOnChange('startDate', e.target.value)} className="mx-1 w-32 rounded p-1" />
+            <label className="ml-5 mr-1">To</label>
+            <input type="date" value={formData?.endDate} onChange={(e) => handleOnChange('endDate', e.target.value)} className="ml-1 w-32 rounded p-1" />
+          </div>
+
+
+
         </div>
+
+        {summary.length > 0 ? <ReportUI summary={summary} /> : '~ No Data is available for the summary ~'}
 
       </div>
     </div>
