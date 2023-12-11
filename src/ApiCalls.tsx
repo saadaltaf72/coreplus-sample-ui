@@ -39,3 +39,13 @@ export const getAppointmentReport = async (startDate, endDate) => {
         return 'some error occured ' + error;
     }
 };
+
+export const getAppointmentsByPracId = async (id, startDate, endDate) => {
+    debugger
+    try {
+        const response = await axios.get(baseUrl + 'practitioners/appointmentsByPracId?' + (id ? 'id=' + id + '&' : '') + (startDate ? 'startDate=' + startDate + '&' : '') + (endDate ? 'endDate=' + endDate : ''));
+        return response.data;
+    } catch (error) {
+        return 'some error occured ' + error;
+    }
+};
